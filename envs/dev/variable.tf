@@ -1,96 +1,77 @@
-variable "region" {
-  description = "AWS region"
+#
+# 全般
+#
+variable "app_name" {
+  description = "アプリケーション名"
   type        = string
-  default     = "ap-northeast-1"
 }
 
 variable "env" {
-  description = "Prefix for resource names"
+  description = "環境名"
   type        = string
-  # default     = "dev"
 }
 
 # 
 # タスク定義
 #
-variable "app_name" {
-  description = "app name"
-  type        = string
-}
-
 variable "ecs_cluster_arn" {
-  description = "ARN of the ECS cluster"
+  description = "ECSクラスターのARN"
   type        = string
-  default     = "arn:aws:ecs:region:account-id:cluster/your-dev-cluster"
-}
-
-variable "ecs_task_execution_role_arn" {
-  description = "ARN of the ECS task role"
-  type        = string
-  # default     = "arn:aws:ecs:region:account-id:task-definition/your-task:1"
-}
-
-variable "task_definition_arn" {
-  description = "ARN of the ECS task definition"
-  type        = string
-  default     = "arn:aws:ecs:region:account-id:task-definition/your-task:1"
 }
 
 # 
 # EFS
 # 
 variable "efs_file_system_id" {
-  description = "The EFS file system ID"
+  description = "EFSファイルシステムID"
   type        = string
-  # default     = "fs-12345678"
 }
 
 variable "efs_access_point_id" {
-  description = "The EFS access point ID"
+  description = "EFSアクセスポイントID"
   type        = string
-  # default     = "fsap-87654321"
 }
-
-# variable "efs_base_path" {
-#   description = "Assign a public IP to the task"
-#   type        = string
-#   default     = "/efs/mnt"
-# }
 
 # 
 # VPC
 # 
 variable "vpc_id" {
-  description = "vpc-id"
+  description = "VPC ID"
   type        = string
-  # default     = "fsap-87654321"
 }
 
-variable "ecs_subnets" {
-  description = "List of subnet IDs for the task"
+variable "ecs_subnet_name_list" {
+  description = "タスク用サブネット名のリスト"
   type        = list(string)
-  # default     = ["subnet-1234567890abcdef0", "subnet-0abcdef1234567890"]
 }
 
-variable "ecs_security_group" {
-  description = "List of security group IDs for the task"
+variable "ecs_security_group_name" {
+  description = "タスク用セキュリティグループ名"
   type        = string
-  # default     = ["sg-12345678"]
 }
-
 
 #
 # EventBridge
 #
-variable "object_key_filter" {
-  description = "List of object key filters with prefix"
-  type = list(object({
-    prefix = string
-  }))
-}
+# variable "s3_object_key_filter" {
+#   description = "S3オブジェクトのキーフィルターリスト"
+#   type = list(object({
+#     prefix = string
+#   }))
+# }
 
-# TODO: リスト形式にする？
-variable "command_args" {
-  description = "ShellScript name"
-  type        = list(string)
+# # TODO: Map形式にする？
+# variable "command_args" {
+#   description = "command or {シェルスクリプト名}"
+#   type        = list(string)
+# }
+
+variable "rule_config" {
+  description = "EventBridge ルール設定"
+  type = map(object({
+    s3_object_key_filter = list(object({
+      prefix = string
+    }))
+    command_args = list(string)
+  }))
 }

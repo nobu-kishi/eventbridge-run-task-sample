@@ -1,28 +1,33 @@
-variable "ecs_task_execution_role_arn" {
-  type = string
-}
-
-variable "name" {
-  type = string
+#
+# 全般
+#
+variable "app_name" {
+  description = "アプリケーション名"
+  type        = string
 }
 
 variable "env" {
-  type = string
+  description = "環境名"
+  type        = string
 }
 
+# 
+# タスク定義
+#
+variable "ecs_cluster_arn" {
+  description = "ECSクラスターのARN"
+  type        = string
+}
 
+# 
+# EFS
+# 
 variable "efs_file_system_id" {
-  type = string
+  description = "EFSファイルシステムID"
+  type        = string
 }
 
 variable "efs_access_point_id" {
-  type = string
-}
-
-variable "name" {
-  type = string
-}
-
-variable "name" {
-  type = string
+  description = "EFSアクセスポイントID"
+  type        = string
 }

@@ -1,32 +1,35 @@
 #
 # タスク定義の作成
 #
+# NOTE: タスク定義はルールとスケジューラーで共有する前提のコード
+
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition
-resource "aws_ecs_task_definition" "batch_task" {
-  family                   = "batch-task"
+resource "aws_ecs_task_definition" "run_task" {
+  family                   = local.ECS_TASK_NAME
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = var.ecs_task_execution_role_arn
+  execution_role_arn       = data.aws_iam_role.ecs_task_exec_role.arn
+  task_role_arn            = data.aws_iam_role.ecs_task_exec_role.arn
 
   container_definitions = jsonencode([
     {
-      name      = "shell-container"
+      name      = local.ECS_CONTAINER_NAME
       image     = "amazonlinux:latest"
       essential = true
       command   = ["echo", "Hello World"]
       mountPoints = [
         {
-          sourceVolume  = "efs-volume"
-          containerPath = "/mnt/efs"
+          sourceVolume  = local.EFS_NAME
+          containerPath = local.EFS_CONTAINERPATH
           readOnly      = false
         }
       ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/shell-task"
+          awslogs-group         = local.ECS_CLOUDWATCH_LOGS_LOG_GROUP
           awslogs-region        = "ap-northeast-1"
           awslogs-stream-prefix = "ecs"
         }
@@ -35,10 +38,17 @@ resource "aws_ecs_task_definition" "batch_task" {
   ])
 
   volume {
-    name = "efs-volume"
+    name = local.EFS_NAME
 
     efs_volume_configuration {
-      file_system_id = var.efs_file_system_id
+      file_system_id          = data.aws_efs_file_system.ecs_volume.id
+      root_directory          = "/"
+      transit_encryption      = "ENABLED"
+      transit_encryption_port = 0
+
+      authorization_config {
+        access_point_id = var.efs_access_point_id
+      }
     }
   }
 
@@ -48,10 +58,7 @@ resource "aws_ecs_task_definition" "batch_task" {
   }
 }
 
-# CloudWatch Logs グループの作成
-# MEMO: 一旦、ルールとスケジューラーでタスク定義を分ける想定
 resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name = "/ecs/shell-task"
-  # name              = "/ecs/${var.prefix}-shell-task"
-  retention_in_days = 7
+  name = local.ECS_CLOUDWATCH_LOGS_LOG_GROUP
+  retention_in_days = 1
 }

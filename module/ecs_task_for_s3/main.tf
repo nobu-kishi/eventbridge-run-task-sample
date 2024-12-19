@@ -1,14 +1,9 @@
-locals {
-  prefix        = "${var.env}-${var.app_name}"
-  cotainer_name = "batch-container"
-}
-
 #
 # S3
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket
 resource "aws_s3_bucket" "bucket" {
-  bucket = "${local.prefix}-bucket"
+  bucket = local.EVENTBRIDGE_SRC_S3_BUCKET_NAME
 
   tags = {
     Name        = var.app_name
@@ -38,17 +33,18 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule
 resource "aws_cloudwatch_event_rule" "schedule_rule" {
-  name = "${local.prefix}-rule"
+  for_each = var.rule_config
 
+  name = "${local._TMP_PREFIX}-${each.key}"
   event_pattern = jsonencode({
     source      = ["aws.s3"],
     detail-type = ["Object Created"],
     detail = {
       bucket = {
-        name = ["${local.prefix}-bucket"]
+        name = ["${local.EVENTBRIDGE_SRC_S3_BUCKET_NAME}"]
       },
       object = {
-        key = "${var.object_key_filter}"
+        key = "${each.value.s3_object_key_filter}"
       }
     }
   })
@@ -56,7 +52,7 @@ resource "aws_cloudwatch_event_rule" "schedule_rule" {
 
 # EventBridge ターゲット用 IAM ロール
 resource "aws_iam_role" "eventbridge_rule_role" {
-  name = "${local.prefix}-eventbridge-rule-role"
+  name = local.EVENTBRIDGE_RULE_ROLE_NAME
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -80,24 +76,28 @@ resource "aws_iam_role_policy_attachment" "eventbridge_policy" {
 # EventBridge ターゲットの作成
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target#ecs-run-task-with-role-and-task-override-usage
 resource "aws_cloudwatch_event_target" "ecs_target" {
-  rule = aws_cloudwatch_event_rule.schedule_rule.name
+  for_each = var.rule_config
+
+  # rule = aws_cloudwatch_event_rule.schedule_rule.name
+  rule = "${local._TMP_PREFIX}-${each.key}"
   arn  = var.ecs_cluster_arn
 
   ecs_target {
     launch_type         = "FARGATE"
-    task_definition_arn = var.task_definition_arn
+    task_definition_arn = var.ecs_task_definition_arn_latest
     network_configuration {
       assign_public_ip = true
-      subnets          = var.ecs_subnets
-      security_groups  = [var.ecs_security_group]
+      subnets          = var.ecs_subnet_id_list
+      security_groups  = [var.ecs_security_group_id]
     }
     platform_version = "LATEST"
   }
   input = jsonencode({
     containerOverrides = [
       {
-        name    = "${local.cotainer_name}",
-        command = "${var.command_args}"
+        name    = local.ECS_CONTAINER_NAME,
+        # command = var.command_args
+        command = each.value.command_args
       }
     ]
   })
