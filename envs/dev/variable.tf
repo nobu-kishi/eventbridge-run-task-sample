@@ -53,21 +53,11 @@ variable "ecs_security_group_name" {
 #
 # EventBridge
 #
-# variable "s3_object_key_filter" {
-#   description = "S3オブジェクトのキーフィルターリスト"
-#   type = list(object({
-#     prefix = string
-#   }))
-# }
-
-# # TODO: Map形式にする？
-# variable "command_args" {
-#   description = "command or {シェルスクリプト名}"
-#   type        = list(string)
-# }
-
 variable "rule_config" {
-  description = "EventBridge ルール設定"
+  description = <<EOF
+EventBridge ルール設定
+s3_object_key_filter = pref
+EOF
   type = map(object({
     s3_object_key_filter = list(object({
       prefix = string
@@ -75,3 +65,22 @@ variable "rule_config" {
     command_args = list(string)
   }))
 }
+
+variable "schedule_config" {
+  description = "EventBridge スケジューラー設定"
+  # description = <<EOF
+  #   # schedule_expression
+  #   https://docs.aws.amazon.com/ja_jp/scheduler/latest/UserGuide/schedule-types.html
+
+  #   # command_args
+  #   https://docs.docker.jp/engine/reference/builder.html#cmd
+  #   ```
+  #   bash
+  #   ```
+  # EOF
+  type = map(object({
+    schedule_expression = string
+    command_args        = list(string)
+  }))
+}
+

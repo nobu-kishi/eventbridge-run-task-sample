@@ -31,12 +31,12 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "ecs_subnet_list" {
+variable "ecs_subnet_id_list" {
   description = "タスク用サブネットIDのリスト"
   type        = list(string)
 }
 
-variable "ecs_security_group" {
+variable "ecs_security_group_id" {
   description = "タスク用セキュリティグループID"
   type        = string
 }
@@ -44,15 +44,10 @@ variable "ecs_security_group" {
 #
 # EventBridge
 #
-variable "s3_object_key_filter" {
-  description = "S3オブジェクトのキーフィルターリスト"
-  type = list(object({
-    prefix = string
+variable "schedule_config" {
+  description = "EventBridge スケジューラー設定"
+  type = map(object({
+    schedule_expression = string
+    command_args        = list(string)
   }))
-}
-
-# TODO: Map形式にする？
-variable "command_args" {
-  description = "command or {シェルスクリプト名}"
-  type        = list(string)
 }

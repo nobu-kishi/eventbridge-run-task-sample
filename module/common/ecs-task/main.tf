@@ -15,21 +15,21 @@ resource "aws_ecs_task_definition" "run_task" {
 
   container_definitions = jsonencode([
     {
-      name      = local.ECS_CONTAINER_NAME
+      name      = "${local.ECS_CONTAINER_NAME}"
       image     = "amazonlinux:latest"
       essential = true
       command   = ["echo", "Hello World"]
       mountPoints = [
         {
-          sourceVolume  = local.EFS_NAME
-          containerPath = local.EFS_CONTAINERPATH
+          sourceVolume  = "${local.EFS_NAME}"
+          containerPath = "${local.EFS_CONTAINERPATH}"
           readOnly      = false
         }
       ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = local.ECS_CLOUDWATCH_LOGS_LOG_GROUP
+          awslogs-group         = "${local.ECS_CLOUDWATCH_LOGS_LOG_GROUP}"
           awslogs-region        = "ap-northeast-1"
           awslogs-stream-prefix = "ecs"
         }
@@ -59,6 +59,6 @@ resource "aws_ecs_task_definition" "run_task" {
 }
 
 resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name = local.ECS_CLOUDWATCH_LOGS_LOG_GROUP
+  name              = local.ECS_CLOUDWATCH_LOGS_LOG_GROUP
   retention_in_days = 1
 }

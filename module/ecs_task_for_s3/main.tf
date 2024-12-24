@@ -29,7 +29,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 
 #
-# EventBridge ルールの作成
+# EventBridge ルール
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule
 resource "aws_cloudwatch_event_rule" "schedule_rule" {
@@ -95,9 +95,9 @@ resource "aws_cloudwatch_event_target" "ecs_target" {
   input = jsonencode({
     containerOverrides = [
       {
-        name    = local.ECS_CONTAINER_NAME,
+        name = "${local.ECS_CONTAINER_NAME}",
         # command = var.command_args
-        command = each.value.command_args
+        command = "${each.value.command_args}"
       }
     ]
   })

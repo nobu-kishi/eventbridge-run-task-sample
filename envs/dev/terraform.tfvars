@@ -11,21 +11,18 @@ efs_file_system_id  = "fs-023f39052120c7636"
 efs_access_point_id = "fsap-01e93b8441fafef36"
 
 # VPC
-vpc_id = "vpc-0d83b785b019ce638"
+vpc_id                  = "vpc-0d83b785b019ce638"
 ecs_subnet_name_list    = ["public-subnet-0", "public-subnet-1"]
 ecs_security_group_name = "ecs-test"
 
+
 # ルール
-# s3_object_key_filter = [
-#   { prefix = "aaa/" },
-#   { prefix = "bbb/" }
-# ]
-
-# command_args = [
-#   "echo",
-#   "hello hello"
-# ]
-
+# TODO: 要件に合わせて、設定値の簡略化・変数名の具体化を行う
+#   例
+#   sample_rule = {
+#     trigger_s3_prefix_path_list = [ "aaa/", "bbb/" ]
+#     shell_name = "hoge.sh"
+#   }
 rule_config = {
   rule1 = {
     s3_object_key_filter = [
@@ -42,6 +39,25 @@ rule_config = {
       { prefix = "ccc/" },
       { prefix = "ddd/" }
     ]
+    command_args = [
+      "echo",
+      "hello hello"
+    ]
+  }
+}
+
+# スケジューラー
+# TODO: ルールと同じ
+schedule_config = {
+  schedule1 = {
+    schedule_expression = "cron(0 0 ? * MON-FRI *)"
+    command_args = [
+      "echo",
+      "hello"
+    ]
+  }
+  schedule2 = {
+    schedule_expression = "cron(0 0 ? * MON *)"
     command_args = [
       "echo",
       "hello hello"

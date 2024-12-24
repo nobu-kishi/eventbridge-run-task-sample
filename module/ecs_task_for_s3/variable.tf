@@ -53,20 +53,6 @@ variable "ecs_security_group_id" {
 #
 # EventBridge
 #
-# variable "s3_object_key_filter" {
-#   description = "S3オブジェクトのキーフィルターリスト"
-#   type = list(object({
-#     prefix = string
-#   }))
-# }
-
-# # TODO: Map形式にする？
-# variable "command_args" {
-#   description = "command or {シェルスクリプト名}"
-#   type        = list(string)
-# }
-
-
 variable "rule_config" {
   description = "EventBridge ルール設定"
   type = map(object({
