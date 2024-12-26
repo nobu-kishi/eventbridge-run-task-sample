@@ -1,7 +1,3 @@
-provider "aws" {
-  region = "ap-northeast-1"
-}
-
 terraform {
   required_version = ">=1.9.8"
   required_providers {
@@ -15,4 +11,14 @@ terraform {
   #   key    = "terraform.tfstate"
   #   region = "ap-northeast-1"
   # }
+}
+
+provider "aws" {
+  region = "ap-northeast-1"
+  default_tags {
+    tags = {
+      Name        = var.app_name
+      Environment = var.env
+    }
+  }
 }

@@ -54,10 +54,7 @@ variable "ecs_security_group_name" {
 # EventBridge
 #
 variable "rule_config" {
-  description = <<EOF
-EventBridge ルール設定
-s3_object_key_filter = pref
-EOF
+  description = "EventBridge ルール設定"
   type = map(object({
     s3_object_key_filter = list(object({
       prefix = string
@@ -68,16 +65,6 @@ EOF
 
 variable "schedule_config" {
   description = "EventBridge スケジューラー設定"
-  # description = <<EOF
-  #   # schedule_expression
-  #   https://docs.aws.amazon.com/ja_jp/scheduler/latest/UserGuide/schedule-types.html
-
-  #   # command_args
-  #   https://docs.docker.jp/engine/reference/builder.html#cmd
-  #   ```
-  #   bash
-  #   ```
-  # EOF
   type = map(object({
     schedule_expression = string
     command_args        = list(string)

@@ -5,7 +5,7 @@
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/efs_file_system
 data "aws_efs_file_system" "ecs_volume" {
   tags = {
-    Name = "dev-main-efs"
+    Name = local.EFS_NAME
   }
 }
 

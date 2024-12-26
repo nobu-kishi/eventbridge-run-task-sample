@@ -23,6 +23,7 @@ module "rule" {
   rule_config                    = var.rule_config
 }
 
+# スケジューラー
 module "scheduler" {
   source   = "../../module/ecs_task_for_scheduled"
   app_name = var.app_name

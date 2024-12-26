@@ -16,9 +16,10 @@ resource "aws_ecs_task_definition" "run_task" {
   container_definitions = jsonencode([
     {
       name      = "${local.ECS_CONTAINER_NAME}"
-      image     = "amazonlinux:latest"
+      image     = "${local.ECS_CONTAINER_IMAGE_URI}"
       essential = true
-      command   = ["echo", "Hello World"]
+      # NOTE: EventBridge契機で実行時、コマンドが上書きされるか動作確認する
+      command = ["echo", "Hello World"]
       mountPoints = [
         {
           sourceVolume  = "${local.EFS_NAME}"

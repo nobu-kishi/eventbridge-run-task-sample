@@ -6,8 +6,9 @@
 resource "aws_scheduler_schedule" "schedule" {
   for_each = var.schedule_config
 
+  name       = "${local._TMP_PREFIX}-${each.key}"
+  group_name = "default"
 
-  name = "${local._TMP_PREFIX}-${each.key}"
   flexible_time_window {
     mode = "OFF"
   }
@@ -17,7 +18,7 @@ resource "aws_scheduler_schedule" "schedule" {
 
   target {
     arn      = var.ecs_cluster_arn
-    role_arn = aws_iam_role.eventbridge_target_role.arn
+    role_arn = aws_iam_role.eventbridge_schedule_role.arn
 
     ecs_parameters {
       launch_type         = "FARGATE"
@@ -28,8 +29,8 @@ resource "aws_scheduler_schedule" "schedule" {
         subnets          = var.ecs_subnet_id_list
         security_groups  = [var.ecs_security_group_id]
       }
-
     }
+
     input = jsonencode({
       containerOverrides = [
         {
@@ -41,8 +42,7 @@ resource "aws_scheduler_schedule" "schedule" {
   }
 }
 
-# EventBridge ターゲット用 IAM ロール
-resource "aws_iam_role" "eventbridge_target_role" {
+resource "aws_iam_role" "eventbridge_schedule_role" {
   name = local.EVENTBRIDGE_SCHEDULE_ROLE_NAME
 
   assume_role_policy = jsonencode({
@@ -60,6 +60,6 @@ resource "aws_iam_role" "eventbridge_target_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "eventbridge_target_policy" {
-  role       = aws_iam_role.eventbridge_target_role.name
+  role       = aws_iam_role.eventbridge_schedule_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceEventsRole"
 }

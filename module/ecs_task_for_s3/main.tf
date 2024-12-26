@@ -1,14 +1,11 @@
 #
 # S3
 #
+
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket
 resource "aws_s3_bucket" "bucket" {
-  bucket = local.EVENTBRIDGE_SRC_S3_BUCKET_NAME
-
-  tags = {
-    Name        = var.app_name
-    Environment = var.env
-  }
+  bucket        = local.EVENTBRIDGE_SRC_S3_BUCKET_NAME
+  force_destroy = true
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
@@ -31,8 +28,9 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 #
 # EventBridge ルール
 #
+
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule
-resource "aws_cloudwatch_event_rule" "schedule_rule" {
+resource "aws_cloudwatch_event_rule" "s3_event_rule" {
   for_each = var.rule_config
 
   name = "${local._TMP_PREFIX}-${each.key}"
@@ -50,7 +48,7 @@ resource "aws_cloudwatch_event_rule" "schedule_rule" {
   })
 }
 
-# EventBridge ターゲット用 IAM ロール
+# EventBridge ターゲット用 IAMロール
 resource "aws_iam_role" "eventbridge_rule_role" {
   name = local.EVENTBRIDGE_RULE_ROLE_NAME
 
@@ -73,14 +71,15 @@ resource "aws_iam_role_policy_attachment" "eventbridge_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceEventsRole"
 }
 
-# EventBridge ターゲットの作成
+# EventBridge ターゲット
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target#ecs-run-task-with-role-and-task-override-usage
 resource "aws_cloudwatch_event_target" "ecs_target" {
   for_each = var.rule_config
 
-  # rule = aws_cloudwatch_event_rule.schedule_rule.name
-  rule = "${local._TMP_PREFIX}-${each.key}"
-  arn  = var.ecs_cluster_arn
+  # NOTE: 変数の受け渡しが複雑化するためモジュール内で設定する
+  arn      = var.ecs_cluster_arn
+  rule     = "${local._TMP_PREFIX}-${each.key}"
+  role_arn = aws_iam_role.eventbridge_rule_role.arn
 
   ecs_target {
     launch_type         = "FARGATE"
@@ -92,15 +91,15 @@ resource "aws_cloudwatch_event_target" "ecs_target" {
     }
     platform_version = "LATEST"
   }
+
   input = jsonencode({
     containerOverrides = [
       {
-        name = "${local.ECS_CONTAINER_NAME}",
-        # command = var.command_args
+        name    = "${local.ECS_CONTAINER_NAME}",
         command = "${each.value.command_args}"
       }
     ]
   })
 
-  role_arn = aws_iam_role.eventbridge_rule_role.arn
+  depends_on = [aws_cloudwatch_event_rule.s3_event_rule]
 }
