@@ -1,6 +1,6 @@
 # タスク定義
 module "ecs_task" {
-  source   = "../../module/common/ecs-task"
+  source   = "../../modules/common/ecs-task"
   app_name = var.app_name
   env      = var.env
 
@@ -11,7 +11,7 @@ module "ecs_task" {
 
 # ルール
 module "rule" {
-  source   = "../../module/ecs_task_for_s3"
+  source   = "../../modules/ecs_task_for_s3"
   app_name = var.app_name
   env      = var.env
 
@@ -25,7 +25,7 @@ module "rule" {
 
 # スケジューラー
 module "scheduler" {
-  source   = "../../module/ecs_task_for_scheduled"
+  source   = "../../modules/ecs_task_for_scheduled"
   app_name = var.app_name
   env      = var.env
 
