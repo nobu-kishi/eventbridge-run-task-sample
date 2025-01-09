@@ -20,7 +20,7 @@ module "rule" {
   vpc_id                         = var.vpc_id
   ecs_subnet_id_list             = data.aws_subnets.ecs_subnets.ids
   ecs_security_group_id          = data.aws_security_group.ecs_security_group.id
-  rule_config                    = var.rule_config
+  rule_list                      = var.rule_list
 }
 
 # スケジューラー
@@ -34,5 +34,5 @@ module "scheduler" {
   vpc_id                         = var.vpc_id
   ecs_subnet_id_list             = data.aws_subnets.ecs_subnets.ids
   ecs_security_group_id          = data.aws_security_group.ecs_security_group.id
-  schedule_config                = var.schedule_config
+  schedule_list                  = var.schedule_list
 }
