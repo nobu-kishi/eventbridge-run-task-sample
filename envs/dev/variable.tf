@@ -53,19 +53,19 @@ variable "ecs_security_group_name" {
 #
 # EventBridge
 #
-variable "rule_config" {
+variable "rule_list" {
   description = "EventBridge ルール設定"
-  type = map(object({
-    s3_object_key_filter = list(object({
-      prefix = string
-    }))
-    command_args = list(string)
+  type = list(object({
+    identifier           = string
+    s3_object_key_filter = list(object({ prefix = string }))
+    command_args         = list(string)
   }))
 }
 
-variable "schedule_config" {
+variable "schedule_list" {
   description = "EventBridge スケジューラー設定"
-  type = map(object({
+  type = list(object({
+    identifier          = string
     schedule_expression = string
     command_args        = list(string)
   }))

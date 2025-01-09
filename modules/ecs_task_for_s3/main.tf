@@ -31,9 +31,10 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule
 resource "aws_cloudwatch_event_rule" "s3_event_rule" {
-  for_each = var.rule_config
+  for_each = { for rule in var.rule_list : rule.identifier => rule }
 
-  name = "${local._TMP_PREFIX}-${each.key}"
+  # NOTE: ルール名は、変数の受け渡しが複雑化するためモジュール内で設定する
+  name = "${local._TMP_PREFIX}-${each.value.identifier}"
   event_pattern = jsonencode({
     source      = ["aws.s3"],
     detail-type = ["Object Created"],
@@ -74,11 +75,10 @@ resource "aws_iam_role_policy_attachment" "eventbridge_policy" {
 # EventBridge ターゲット
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target#ecs-run-task-with-role-and-task-override-usage
 resource "aws_cloudwatch_event_target" "ecs_target" {
-  for_each = var.rule_config
+  for_each = { for rule in var.rule_list : rule.identifier => rule }
 
-  # NOTE: 変数の受け渡しが複雑化するためモジュール内で設定する
   arn      = var.ecs_cluster_arn
-  rule     = "${local._TMP_PREFIX}-${each.key}"
+  rule     = "${local._TMP_PREFIX}-${each.value.identifier}"
   role_arn = aws_iam_role.eventbridge_rule_role.arn
 
   ecs_target {

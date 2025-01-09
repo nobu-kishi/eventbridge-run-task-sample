@@ -42,128 +42,109 @@ TODO:
 
 ---
 
-## rule_configの設定説明
+## rule_listの設定
 
-### 概要
+- 複数のルールを管理するための変数。
+- リスト要素を追加することで、複数ルールを定義する。
 
-| **変数名**    | **フィールド名**       | **詳細**                                                                                                  | **例**                                   |
-| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `rule_config` |                        | 複数のルールを管理するための変数。                                                                        | -                                        |
-|               | `s3_object_key_filter` | S3バケット内のオブジェクトキーをフィルタリングする条件リスト。                                            | -                                        |
-|               | └─`prefix`             | フィルタ対象のS3オブジェクトキーの接頭辞。                                                                | `"images/"`, `"docs/"`                   |
-|               | `command_args`         | ECSタスク内で実行されるコマンドと引数のリスト。（詳細は[command_argsの設定方法](#command_argsの設定方法) | `["echo", "processing images and docs"]` |
+### 設定項目
 
+| **項目名**             | **詳細**                                                                                                                                                       |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identifier`           | ルール名に使用する識別子。EventBridgeの制約上、ルール名は一意な名称を付与する必要がある。                                                                      |
+| `s3_object_key_filter` | S3にファイルがアップロードされた際、特定のディレクトリやファイル形式に対してイベントを起動する条件を指定。<br>`prefix`,`suffix`,`wildcard`を使用して指定する。 |
+| `command_args`         | ECSタスク内で実行されるコマンドと引数のリスト。（詳細は[command_argsの設定方法](#command_argsの設定方法)）                                                     |
 
-#### 注釈
+#### 補足
 
-- `rule_config[<配列キー>]`
-  - `<配列キー>`は、**ルール名のSuffix**として機能します。
-  - ルールを識別するための一意な名称を設定してください（例: `rule1`, `rule2`）。
-  - 複数のルールを定義する場合は、`<配列キー>`を追加してください。
+- `s3_object_key_filter`は、EventBrridgeルールを設定するための**イベントパターン**の一部です。
+- イベントパターンで使用できる演算子の詳細は、AWS公式ドキュメントをご参照ください。
+
+https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-pattern-operators.html
 
 ### 設定例
 
-以下に`rule_config`の具体例を示す。
+以下に`rule_list`の具体例を示す。
 
 ```hcl
-rule_config = {
-  rule1 = {
+rule_list = [
+  {
+    identifier = "rule1"
     s3_object_key_filter = [
       { prefix = "images/" },  # images/ で始まるオブジェクトを対象
       { prefix = "docs/" }  # docs/ で始まるオブジェクトを対象
     ]
-    command_args = [
-      "echo", "processing images and docs"  # タスクで実行されるコマンド
-    ]
-  }
-  rule2 = {
+    command_args = [ "echo", "hello rule1" ]  # タスクで実行されるコマンド
+  },
+  {
+    identifier = "rule2"
     s3_object_key_filter = [
       { prefix = "logs/" }  # logs/ で始まるオブジェクトを対象
     ]
-    command_args = [
-      "cat", "/tmp/logs"  # タスクで実行されるコマンド
-    ]
+    command_args = [ "echo", "hello rule2" ]  # タスクで実行されるコマンド
   }
-}
+]
 ```
 
 ---
 
-## schedule_configの設定説明
+## schedule_listの設定
 
-### 概要
+- 複数のスケジュールを管理するための変数。
 
-| **変数名**        | **フィールド名**      | **詳細**                                                                                                   | **例**                                           |
-| ----------------- | --------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `schedule_config` |                       | 複数のスケジュールを管理するための変数。                                                                   | -                                                |
-|                   | `schedule_expression` | スケジュールを指定する式。cron式またはレート式が使用可能。                                                 | `"cron(0 0 ? * MON-FRI *)"`, `"rate(5 minutes)"` |
-|                   | `command_args`        | ECSタスク内で実行されるコマンドと引数のリスト。（詳細は[command_argsの設定方法](#command_argsの設定方法)） | `["echo", "hello"]`                              |
+### 設定項目
 
-#### 注釈
+| **項目名**            | **詳細**                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `identifier`          | スケジュール名に使用する識別子。EventBridgeの制約上、スケジュール名は一意な名称を付与する必要がある。      |
+| `schedule_expression` | スケジュールを指定する式。cron式またはレート式が使用可能。                                                 |
+| `command_args`        | ECSタスク内で実行されるコマンドと引数のリスト。（詳細は[command_argsの設定方法](#command_argsの設定方法)） |
 
-- `schedule_config[<配列キー>]`
-  - `<配列キー>`は、**スケジュール名のSuffix**として機能します。
-  - スケジュールを識別するための一意な名称を設定してください（例: `schedule1`, `schedule2`）。
-  - **`schedule_expression`** では以下の形式が使用可能：
-    - **cron式**: cron形式でスケジュールを指定（例: `cron(0 0 ? * MON-FRI *)`）。
-    - **レート式**: 定期的に繰り返す処理を指定（例: `rate(5 minutes)`）。
-  - 複数のスケジュールを定義する場合は、`<配列キー>`を追加してください。
-
-### スケジュール式の形式
+#### 補足
 
 1. **cron式**
-
-- 特定の時間や曜日に基づいたスケジュールを指定する。
-- 例: 
-  - `"cron(0 0 ? * MON-FRI *)"`: 平日（Monday～Friday）の毎日0時に実行。
-  - `"cron(15 10 ? * * *)"`: 毎日10時15分に実行。
-- 詳細は[AWS Cron式ガイド](https://docs.aws.amazon.com/ja_jp/scheduler/latest/UserGuide/schedule-types.html#cron-based)を参照。
-
+     - 特定の時間や曜日に基づいたスケジュールを指定する。
+     - [AWS公式 Cron式](https://docs.aws.amazon.com/ja_jp/scheduler/latest/UserGuide/schedule-types.html#cron-based)
 2. **レート式**
-
-- 一定間隔で繰り返すスケジュールを指定する。
-- 例:
-  - `"rate(5 minutes)"`: 5分ごとに実行。
-  - `"rate(1 day)"`: 毎日実行。
-- 詳細は[AWS レート式ガイド](https://docs.aws.amazon.com/ja_jp/scheduler/latest/UserGuide/schedule-types.html#rate-based)を参照。
+     - 一定間隔で繰り返すスケジュールを指定する。
+     - [AWS公式 レート式](https://docs.aws.amazon.com/ja_jp/scheduler/latest/UserGuide/schedule-types.html#rate-based)
 
 ### 設定例
 
-以下に`schedule_config`の具体例を示す。
+以下に`schedule_list`の具体例を示す。
 
 ```hcl
-schedule_config = {
-  schedule1 = {
+schedule_list = [
+  {
+    identifier          = "schedule1"
     schedule_expression = "cron(0 0 ? * MON-FRI *)"  # 平日0時に実行されるスケジュール
-    command_args = [
-      "echo", "hello"  # タスクで実行されるコマンド
-    ]
+     command_args = [ "echo", "hello schedule1" ]  # タスクで実行されるコマンド
+  },
+  {
+    identifier          = "schedule2"
+    schedule_expression = "cron(0 0 ? * MON *)"  # 5分ごとに実行されるスケジュール
+    command_args = [ "echo", "hello schedule2" ]  # タスクで実行されるコマンド
   }
-  schedule2 = {
-    schedule_expression = "rate(5 minutes)"  # 5分ごとに実行されるスケジュール
-    command_args = [
-      "echo", "repeating task"  # タスクで実行されるコマンド
-    ]
-  }
-}
+]
 ```
 
 ---
 
-## command_argsの設定方法
+## command_argsの設定
 
 ### 概要
 
-- `command_args`は、ECSタスク内で実行されるコマンドとその引数をリスト形式で指定する。
-  - Dockerfileの`CMD`に相当する。（詳細は、[Docker公式 CMD](https://docs.docker.jp/engine/reference/builder.html#cmd)）を参照）
-- ECSタスクを実行する際、command_argsで指定した値はコンテナのエントリーポイントで定義されたコマンドに渡される。
-  - エントリーポイントが設定されていない場合、command_args自体が実行される。
+- `command_args`の設定は、Dockerfileの`CMD`に相当する。
+- 詳細は、[Docker公式 CMD](https://docs.docker.jp/engine/reference/builder.html#cmd)を参照。
+- コンテナ内の環境変数を利用したい場合、[応用例](#応用例)形式で設定すること。
 
 ### 設定例
 
 以下に、`command_args`の設定例を示す。
 
 #### 基本例
+
+- Dockerfileの**シェル形式**に相当する設定方法
 
 ```sh
 command_args = ["echo", "hello"]
@@ -175,6 +156,8 @@ command_args = ["/bin/bash", "/sh/hoge.sh"]
 
 #### 応用例
 
+- Dockerfileの**exec形式**に相当する設定方法
+
 ```sh
-command_args = ["/bin/bash", "-c", "echo 実行結果: $(/sh/hoge.sh)"]
+command_args = ["/bin/bash", "-c", "echo 実行結果: $(/sh/hoge.sh $HOME)"]
 ```

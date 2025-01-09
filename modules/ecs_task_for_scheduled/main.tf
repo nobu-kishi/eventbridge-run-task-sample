@@ -4,9 +4,10 @@
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/scheduler_schedule
 resource "aws_scheduler_schedule" "schedule" {
-  for_each = var.schedule_config
+  for_each = { for schedule in var.schedule_list : schedule.identifier => schedule }
 
-  name       = "${local._TMP_PREFIX}-${each.key}"
+  # NOTE: スケジュール名は、変数の受け渡しが複雑化するためモジュール内で設定する
+  name       = "${local._TMP_PREFIX}-${each.value.identifier}"
   group_name = "default"
 
   flexible_time_window {

@@ -44,9 +44,10 @@ variable "ecs_security_group_id" {
 #
 # EventBridge
 #
-variable "schedule_config" {
+variable "schedule_list" {
   description = "EventBridge スケジューラー設定"
-  type = map(object({
+  type = list(object({
+    identifier          = string
     schedule_expression = string
     command_args        = list(string)
   }))
